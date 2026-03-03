@@ -1,0 +1,52 @@
+1) Установить  drf
+ - установить django-debug-toolbar
+ - установить drf-spectacular
+ - установить drf-nested-routers
+ - установить django-filter
+ - установить django-stubs
+ - установить markdown
+
+2) Создать проект
+ - django-admin startproject first_one . 
+ - cd first_one
+
+3) Создать приложение
+ - django-admin startapp first_app
+ - cd ..
+
+4) Задать настройки DRF в settings.py
+ - в самый низ настроек
+
+	Настройки для работы DRF
+
+	INSTALLED_APPS += [
+		'debug_toolbar',
+		'rest_framework',
+		'first_one.first_app',
+		'drf_spectacular',
+		'django_filters',
+	]
+
+5) Создать url для авторизации
+ - в файле urls.python, в список urlpatterns
+
+    path('api-auth/', include('rest_framework.urls')),
+
+
+) Пока опционально. Сделать миграции
+ - python manage.py migrate
+
+6) Создать суперюзера
+ - python manage.py createsuperuser --username admin --email admin@example.com
+
+7) Добавить в мидлваре дебаг тулбар
+ - В settings.py в самый низ
+
+	MIDDLEWARE = [
+		'debug_toolbar.middleware.DebugToolbarMiddleware'
+	] + MIDDLEWARE
+
+8) Добавить ip адреса с которых будет доступен дебаг тулбар
+ - В settings.py в самый низ
+
+
