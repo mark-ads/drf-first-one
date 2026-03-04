@@ -32,9 +32,16 @@
 
     path('api-auth/', include('rest_framework.urls')),
 
+6) Сделать модели
+ - в файле models.py
 
-) Пока опционально. Сделать миграции
+7) Пока опционально. Сделать миграции
+ - python manage.py makemigrations
  - python manage.py migrate
+
+8) Сделать файл популяции БД
+ - project/app/management/commands/__init__.py
+ - project/app/management/commands/populate_db.py
 
 6) Создать суперюзера
  - python manage.py createsuperuser --username admin --email admin@example.com
@@ -49,4 +56,7 @@
 8) Добавить ip адреса с которых будет доступен дебаг тулбар
  - В settings.py в самый низ
 
+	if settings.DEBUG:
+		urlpatterns += debug_toolbar_urls()
 
+9) 
