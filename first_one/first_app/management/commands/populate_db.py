@@ -29,7 +29,7 @@ class Command(BaseCommand):
         ]
 
         for i in range(3):
-            place = EventPlace.objects.get_or_create(
+            place, _ = EventPlace.objects.get_or_create(
                 name=places_names[i],
                 latitude=places_coordinates[i][0],
                 longitude=places_coordinates[i][1],
@@ -86,3 +86,15 @@ class Command(BaseCommand):
                         EventImage.objects.create(
                             event=event, image=File(f, name=f"{i}_{j}.jpg")
                         )
+
+            images = EventImage.objects.filter(event=event)
+
+            if images.exists() and not event.preview:
+                first_image = images.first()
+                if first_image:
+
+                    original_name = Path(first_image.image.path).name
+                    preview_name = f'prev_{original_name}'
+                    with open(first_image.image.path, 'rb') as f:
+                        event.preview = File(f, name=preview_name)
+                        event.save()
