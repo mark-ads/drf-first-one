@@ -37,7 +37,9 @@ class Event(models.Model):
         CANCELLED = "Отменено"
 
     name = models.CharField(max_length=100)
-    preview = models.ImageField(blank=True, null=True, upload_to="event_preview/")
+    preview = models.ImageField(
+        blank=True, null=True, upload_to="first_one/first_app/images/event_preview/"
+    )
     description = models.TextField()
     publish_date = models.DateTimeField()
     start_date = models.DateTimeField()
@@ -80,7 +82,7 @@ class Event(models.Model):
 
 class EventImage(models.Model):
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="images")
-    image = models.ImageField(upload_to="event_pics/")
+    image = models.ImageField(upload_to="first_one/first_app/images/event_pics/")
 
     def __str__(self):
         return f"{self.event.name} - {getattr(self, 'id', 'unsaved')}"

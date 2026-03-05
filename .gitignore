@@ -5,3 +5,4 @@ __pycache__/
 assignment.txt
 **/migrations/
 event_pics/
+event_preview/
