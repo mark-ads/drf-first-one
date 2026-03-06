@@ -44,7 +44,7 @@ class EventSerializer(serializers.ModelSerializer):
         queryset=EventPlace.objects.all(), write_only=True
     )
 
-    place_info = EventPlaceSerializer(source='place', read_only=True)
+    place_info = EventPlaceSerializer(source="place", read_only=True)
 
     class Meta:
         model = Event
@@ -60,7 +60,7 @@ class EventSerializer(serializers.ModelSerializer):
             "author",
             "author_info",
             "place",
-            'place_info',
+            "place_info",
             "rating",
             "status",
         ]
@@ -83,9 +83,7 @@ class EventSerializer(serializers.ModelSerializer):
                 )
 
             if start_date < datetime.now():
-                raise ValidationError(
-                    "Дата начала не может быть в прошлом."
-                )
+                raise ValidationError("Дата начала не может быть в прошлом.")
 
         if publish_date and end_date:
             if publish_date > end_date:
