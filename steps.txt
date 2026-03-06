@@ -43,8 +43,24 @@
  - project/app/management/commands/__init__.py
  - project/app/management/commands/populate_db.py
 
-6) Создать суперюзера
+8.1) Опционально Создать суперюзера
  - python manage.py createsuperuser --username admin --email admin@example.com
+
+9) Провести популяцию БД
+ - python manage.py populate_db
+
+10) Создать сериализаторы
+ - project/app/serializers.py
+
+11) Создать права
+ - project/app/permissions.py
+
+12) Создать вьюшки
+ - project/app/views.py
+
+13) Добавить роутеры
+ - project/urls.py
+ - project/app/urls.py
 
 7) Добавить в мидлваре дебаг тулбар
  - В settings.py в самый низ
