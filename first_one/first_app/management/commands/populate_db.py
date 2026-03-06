@@ -67,7 +67,7 @@ class Command(BaseCommand):
 
                     event.delete()
 
-            place_idx = i if i == 4 else 0  # чтобы 4 ивенту назначилось [0] место проведения
+            place_idx = i if i < 3 else 0  # чтобы 4 ивенту назначилось [0] место проведения
             place = EventPlace.objects.get(name=places_names[place_idx])
 
             if now < event_dates[i] - timedelta(days=10):
