@@ -60,6 +60,7 @@ class EventSerializer(serializers.ModelSerializer):
             "author",
             "author_info",
             "place",
+            'place_info',
             "rating",
             "status",
         ]
