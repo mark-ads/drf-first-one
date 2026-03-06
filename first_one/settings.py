@@ -128,6 +128,8 @@ STATIC_URL = 'static/'
 
 
 # Настройки для работы DRF
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / 'media'
 
 INSTALLED_APPS += [
     'debug_toolbar',
@@ -145,3 +147,18 @@ INTERNAL_IPS = [
     '127.0.0.1',
 ]
 
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+        'rest_framework.permissions.IsAdminUser',
+    ],
+    'DEFAULT_RENDER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer',
+    ]
+    
+}
