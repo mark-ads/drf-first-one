@@ -62,6 +62,9 @@
  - project/urls.py
  - project/app/urls.py
 
+14) Добавить фильтры
+ - project/app/filters.py
+
 7) Добавить в мидлваре дебаг тулбар
  - В settings.py в самый низ
 
