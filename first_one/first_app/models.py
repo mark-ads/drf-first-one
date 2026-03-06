@@ -62,6 +62,9 @@ class Event(models.Model):
         max_length=15, choices=StatusChoices.choices, default=StatusChoices.DRAFT
     )
 
+    def __str__(self):
+        return self.name
+
     class Meta:
         verbose_name = "Мероприятия"
         verbose_name_plural = "Мероприятия"
