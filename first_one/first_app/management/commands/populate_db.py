@@ -18,6 +18,11 @@ class Command(BaseCommand):
                 username="admin", email="admin@example.com", password="admin"
             )
 
+        if not User.objects.filter(is_superuser=False).exists():
+            User.objects.create_user(
+                username="user", email="user@example.com", password="user"
+            )
+
         admin = User.objects.get(username="admin")
 
         places_names = ["РАНЧО Шарье", "Кубеково", "Сибирский Сафари клуб"]
@@ -35,29 +40,35 @@ class Command(BaseCommand):
                 longitude=places_coordinates[i][1],
             )
 
-        event_names = ["Зимний корпоратив", "8 Марта", "Тимбилдинг"]
+        event_names = [
+            "Зимний корпоратив",
+            "8 Марта",
+            "Тимбилдинг",
+            "Весенний корпоратив",
+        ]
 
         event_dates = [
             datetime.fromisoformat("2026-01-27T18:00:00"),
             datetime.fromisoformat("2026-03-08T18:00:00"),
             datetime.now() + timedelta(days=7),
+            datetime.now() + timedelta(days=30),
         ]
 
         now = datetime.now()
 
-        for i in range(3):
+        for i in range(4):
             # Делаю проверку, а не get_or_create(), так как из-за datetime.now()
             # ивент Тимбилдинг будет дублироваться при повторном использовании populate
             if Event.objects.filter(name=event_names[i]).exists():
-                for event in Event.objects.filter(name=event_names[i]):  
-
+                for event in Event.objects.filter(name=event_names[i]):
                     # Вложенный цикл удаления изображений мероприятия
                     for image in event.images.all():  # type: ignore
                         image.delete()
 
                     event.delete()
 
-            place = EventPlace.objects.get(name=places_names[i])
+            place_idx = i if i == 4 else 0  # чтобы 4 ивенту назначилось [0] место проведения
+            place = EventPlace.objects.get(name=places_names[place_idx])
 
             if now < event_dates[i] - timedelta(days=10):
                 status = Event.StatusChoices.DRAFT
@@ -81,12 +92,15 @@ class Command(BaseCommand):
             )
 
             for j in range(2):
+                if i > 2:  # 4 ивент остаётся без картинок 
+                    break
+
                 file_name = f"{i}_{j}.jpg"
                 img_path = Path(settings.BASE_DIR) / "sample_data" / file_name
 
                 if not EventImage.objects.filter(
                     event=event,
-                    image=f"first_one/first_app/images/event_pics/{file_name}",
+                    image=f"media/event_pics/{file_name}",
                 ).exists():
                     with open(img_path, "rb") as f:
                         EventImage.objects.create(
