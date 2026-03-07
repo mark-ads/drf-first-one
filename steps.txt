@@ -65,6 +65,12 @@
 14) Добавить фильтры
  - project/app/filters.py
 
+15) Подключить фильтры к вьюшкам
+
+16) Добавить celery
+- project/celery.py
+- project/app/tasks.py
+
 7) Добавить в мидлваре дебаг тулбар
  - В settings.py в самый низ
 

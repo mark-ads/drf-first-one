@@ -6,3 +6,7 @@ assignment.txt
 **/migrations/
 event_pics/
 event_preview/
+celerybeat-schedule.bak
+celerybeat-schedule.dat
+celerybeat-schedule.dir
+

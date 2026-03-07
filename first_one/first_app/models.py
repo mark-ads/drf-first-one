@@ -32,17 +32,15 @@ class EventPlace(models.Model):
 
 class Event(models.Model):
     class StatusChoices(models.TextChoices):
-        DRAFT = 'draft', "Черновик"
-        PUBLISHED = 'published', "Опубликовано"
-        STARTED = 'started', "В процессе"
-        ENDED = 'ended', "Закончилось"
-        CANCELLED = 'cancelled', "Отменено"
+        DRAFT = "draft", "Черновик"
+        PUBLISHED = "published", "Опубликовано"
+        STARTED = "started", "В процессе"
+        ENDED = "ended", "Закончилось"
+        CANCELLED = "cancelled", "Отменено"
 
     name = models.CharField(max_length=100)
 
-    preview = models.ImageField(
-        blank=True, null=True, upload_to="event_preview/"
-    )
+    preview = models.ImageField(blank=True, null=True, upload_to="event_preview/")
 
     description = models.TextField()
     publish_date = models.DateTimeField()
@@ -112,3 +110,46 @@ class EventImage(models.Model):
     class Meta:
         verbose_name = "Изображение мероприятия"
         verbose_name_plural = "Изображения мероприятия"
+
+
+class WeatherForecast(models.Model):
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="weather")
+    created_at = models.DateTimeField(auto_now_add=True)
+    temperature = models.DecimalField(
+        max_digits=3,
+        decimal_places=1,
+        validators=[MinValueValidator(-100), MaxValueValidator(100)],
+        blank=True,
+        null=True,
+    )
+    humidity = models.PositiveIntegerField(
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+        blank=True,
+        null=True,
+    )
+    pressure = models.DecimalField(
+        max_digits=6,
+        decimal_places=2,
+        validators=[MinValueValidator(500), MaxValueValidator(1200)],
+        blank=True,
+        null=True,
+    )
+    wind_direction = models.PositiveIntegerField(
+        validators=[MinValueValidator(0), MaxValueValidator(359)],
+        blank=True,
+        null=True,
+    )
+    wind_speed = models.DecimalField(
+        max_digits=4,
+        decimal_places=1,
+        validators=[MinValueValidator(0), MaxValueValidator(300)],
+        blank=True,
+        null=True,
+    )
+
+    def __str__(self):
+        return f'Прогноз погоды для "{self.event.name}".'
+
+    class Meta:
+        verbose_name = "Прогноз погоды"
+        verbose_name_plural = "Прогнозы погоды"

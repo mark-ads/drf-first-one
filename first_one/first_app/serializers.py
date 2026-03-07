@@ -3,19 +3,13 @@ from datetime import datetime
 from rest_framework import serializers
 from rest_framework.serializers import ValidationError
 
-from first_one.first_app.models import Event, EventImage, EventPlace
-
-
-class EventPlaceSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = EventPlace
-        fields = ["id", "name", "latitude", "longitude"]
+from first_one.first_app.models import Event, EventImage, EventPlace, WeatherForecast
 
 
 class EventImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = EventImage
-        fields = ["id", "event", "image"]
+        fields = "__all__"
 
     def validate_image(self, image):
         max_size = 10 * 1024 * 1024
@@ -27,6 +21,36 @@ class EventImageSerializer(serializers.ModelSerializer):
             raise ValidationError("Изображение должно быть формата jpeg или png.")
 
         return image
+
+
+class WeatherForecastSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = WeatherForecast
+        fields = "__all__"
+
+
+class EventPlaceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EventPlace
+        fields = ["id", "name", "latitude", "longitude"]
+
+
+class EventPlaceWithWeatherSerializer(EventPlaceSerializer):
+    weather_forecast = serializers.SerializerMethodField()
+
+    class Meta(EventPlaceSerializer.Meta):
+        fields = EventPlaceSerializer.Meta.fields + ["weather_forecast"]
+
+    def get_weather_forecast(self, _):
+        event = self.context.get("event")
+        if not event:
+            return None
+        # Не смотря на то, что при обновлении погоды удаляются старые строки -
+        # оставляю сортировку по самому свежему прогнозу
+        forecast = event.weather.order_by("-created_at").first()
+        if not forecast:
+            return None
+        return WeatherForecastSerializer(forecast).data
 
 
 class EventSerializer(serializers.ModelSerializer):
@@ -44,7 +68,7 @@ class EventSerializer(serializers.ModelSerializer):
         queryset=EventPlace.objects.all(), write_only=True
     )
 
-    place_info = EventPlaceSerializer(source="place", read_only=True)
+    place_info = serializers.SerializerMethodField()
 
     class Meta:
         model = Event
@@ -70,6 +94,12 @@ class EventSerializer(serializers.ModelSerializer):
             "id": object.author.id,
             "username": object.author.username,
         }
+
+    def get_place_info(self, object):
+        serializer = EventPlaceWithWeatherSerializer(
+            object.place, context={"event": object}
+        )
+        return serializer.data
 
     def validate(self, attrs):
         publish_date = attrs.get("publish_date")
