@@ -24,8 +24,15 @@ class EventFilter(django_filters.FilterSet):
         field_name="place", queryset=EventPlace.objects.all()
     )
 
-    rating = django_filters.RangeFilter(field_name='rating')
+    rating = django_filters.RangeFilter(field_name="rating")
 
     class Meta:
         model = Event
         fields = []
+
+
+class EventNotificationFilter(django_filters.FilterSet):
+    event = django_filters.ModelMultipleChoiceFilter(
+        field_name="event",
+        queryset=Event.objects.filter(status=Event.StatusChoices.DRAFT),
+    )

@@ -153,3 +153,19 @@ class WeatherForecast(models.Model):
     class Meta:
         verbose_name = "Прогноз погоды"
         verbose_name_plural = "Прогнозы погоды"
+
+
+class EventNotification(models.Model):
+    event = models.OneToOneField(
+        Event, on_delete=models.CASCADE, related_name="notification"
+    )
+    recipients = models.JSONField(blank=True, null=True)
+    email_subject = models.CharField(max_length=100, blank=True, null=True)
+    email_text = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return f"Уведомление для {self.event.name}"
+
+    class Meta:
+        verbose_name = "Уведомление о публикации"
+        verbose_name_plural = "Уведомления о публикации"

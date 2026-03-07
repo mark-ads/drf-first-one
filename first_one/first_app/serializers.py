@@ -3,7 +3,13 @@ from datetime import datetime
 from rest_framework import serializers
 from rest_framework.serializers import ValidationError
 
-from first_one.first_app.models import Event, EventImage, EventPlace, WeatherForecast
+from first_one.first_app.models import (
+    Event,
+    EventImage,
+    EventNotification,
+    EventPlace,
+    WeatherForecast,
+)
 
 
 class EventImageSerializer(serializers.ModelSerializer):
@@ -128,3 +134,14 @@ class EventSerializer(serializers.ModelSerializer):
                 )
 
         return attrs
+
+
+class EventNotificationSerializer(serializers.ModelSerializer):
+    event = serializers.PrimaryKeyRelatedField(
+        queryset=Event.objects.filter(status=Event.StatusChoices.DRAFT)
+    )
+    recipients = serializers.JSONField()
+
+    class Meta:
+        model = EventNotification
+        fields = "__all__"

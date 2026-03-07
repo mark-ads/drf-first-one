@@ -3,11 +3,12 @@ from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.permissions import IsAdminUser
 from rest_framework.viewsets import ModelViewSet
 
-from first_one.first_app.filters import EventFilter
-from first_one.first_app.models import Event, EventImage, EventPlace
+from first_one.first_app.filters import EventFilter, EventNotificationFilter
+from first_one.first_app.models import Event, EventImage, EventNotification, EventPlace
 from first_one.first_app.permissions import EventImagePermission, EventPermission
 from first_one.first_app.serializers import (
     EventImageSerializer,
+    EventNotificationSerializer,
     EventPlaceSerializer,
     EventSerializer,
 )
@@ -57,3 +58,18 @@ class EventImageViewSet(ModelViewSet):
                 ]
             )
         return qs
+
+
+class EventNotificationViewSet(ModelViewSet):
+    queryset = EventNotification.objects.all()
+    serializer_class = EventNotificationSerializer
+    permission_classes = [IsAdminUser]
+
+    filterset_class = EventNotificationFilter
+
+    def get_queryset(self):  # type: ignore
+        qs = EventNotification.objects.select_related('event')
+        qs = qs.filter(event__status=Event.StatusChoices.DRAFT)
+
+        return qs
+
