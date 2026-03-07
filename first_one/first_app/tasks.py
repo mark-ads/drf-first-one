@@ -76,9 +76,6 @@ def update_weather_task():
         )
 
 
-update_weather_task.delay()  # type: ignore
-
-
 @shared_task
 def send_email_notification(notification_id: int):
     """Отправить уведомления на имейл всем получателям."""
