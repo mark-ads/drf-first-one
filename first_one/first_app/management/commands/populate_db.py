@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 from django.core.files import File
 from django.core.management import BaseCommand
 
-from first_one.first_app.models import Event, EventImage, EventPlace
+from first_one.first_app.models import Event, EventImage, EventNotification, EventPlace
 
 
 class Command(BaseCommand):
@@ -106,3 +106,16 @@ class Command(BaseCommand):
                         EventImage.objects.create(
                             event=event, image=File(f, name=f"{i}_{j}.jpg")
                         )
+
+
+        if EventNotification.objects.all().exists():
+            EventNotification.objects.all().delete()
+
+        event = Event.objects.filter(status=Event.StatusChoices.DRAFT).first()
+        
+        EventNotification.objects.create(
+            event=event,
+            recipients=['first@example.com', 'second@example.com'],
+            email_subject='Пример темы письма',
+            email_text='Приглашаем на мероприятие',
+        )
