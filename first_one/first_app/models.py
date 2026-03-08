@@ -38,7 +38,7 @@ class Event(models.Model):
         ENDED = "ended", "Закончилось"
         CANCELLED = "cancelled", "Отменено"
 
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, unique=True)
 
     preview = models.ImageField(blank=True, null=True, upload_to="event_preview/")
 

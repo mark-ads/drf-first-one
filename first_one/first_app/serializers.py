@@ -145,3 +145,7 @@ class EventNotificationSerializer(serializers.ModelSerializer):
     class Meta:
         model = EventNotification
         fields = "__all__"
+
+
+class EventImportSerializer(serializers.Serializer):
+    file = serializers.FileField()
