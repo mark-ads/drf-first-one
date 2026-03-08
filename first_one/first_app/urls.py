@@ -6,7 +6,7 @@ from first_one.first_app.views import (
     EventNotificationViewSet,
     EventPlaceViewSet,
     EventViewSet,
-    ImportEvent,
+    ImportEventAPIView,
 )
 
 router = DefaultRouter()
@@ -17,5 +17,5 @@ router.register("notifications", EventNotificationViewSet)
 
 urlpatterns = [
     path("", include(router.urls)),
-    path("events-import/", ImportEvent.as_view(), name="import_events"),
+    path("events-import/", ImportEventAPIView.as_view(), name="import_events"),
 ]

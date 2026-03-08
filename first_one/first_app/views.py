@@ -78,7 +78,7 @@ class EventNotificationViewSet(ModelViewSet):
         return qs
 
 
-class ImportEvent(generics.CreateAPIView):
+class ImportEventAPIView(generics.CreateAPIView):
     serializer_class = EventImportSerializer
     permission_classes = [IsAdminUser]
 
