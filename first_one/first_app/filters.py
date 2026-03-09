@@ -4,19 +4,27 @@ from first_one.first_app.models import Event, EventPlace
 
 
 class EventFilter(django_filters.FilterSet):
-    start_date_after = django_filters.DateTimeFilter(
+    publish_date_after = django_filters.IsoDateTimeFilter(
+        field_name="publish_date", lookup_expr="gte"
+    )
+
+    publish_date_before = django_filters.IsoDateTimeFilter(
+        field_name="publish_date", lookup_expr="lte"
+    )
+
+    start_date_after = django_filters.IsoDateTimeFilter(
         field_name="start_date", lookup_expr="gte"
     )
 
-    start_date_before = django_filters.DateTimeFilter(
+    start_date_before = django_filters.IsoDateTimeFilter(
         field_name="start_date", lookup_expr="lte"
     )
 
-    end_date_after = django_filters.DateTimeFilter(
+    end_date_after = django_filters.IsoDateTimeFilter(
         field_name="end_date", lookup_expr="gte"
     )
 
-    end_date_before = django_filters.DateTimeFilter(
+    end_date_before = django_filters.IsoDateTimeFilter(
         field_name="end_date", lookup_expr="lte"
     )
 
