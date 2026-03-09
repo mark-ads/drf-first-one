@@ -156,8 +156,15 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 2,  # пока что 2 для тестов работоспособности
-        
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Events API',
+    'DESCRIPTION': 'Документация API всего приложения.',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
 }
 
 CELERY_BROKER_URL = 'redis://localhost:6379/0'

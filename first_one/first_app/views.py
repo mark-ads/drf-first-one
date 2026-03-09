@@ -2,6 +2,8 @@ from datetime import datetime
 
 from django.http import FileResponse
 from django_filters.rest_framework import DjangoFilterBackend
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import generics, status
 from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter, SearchFilter
@@ -26,13 +28,69 @@ from first_one.first_app.services.event_export import EventExportService
 from first_one.first_app.services.event_import import EventImportService
 
 
+@extend_schema_view(
+    list=extend_schema(
+        summary="Список мест для мероприятий",
+        description="Возвращает список всех мест для проведения мероприятий.",
+    ),
+    retrieve=extend_schema(
+        summary="Получить место мероприятия",
+        description="Возвращает данные конкретного места для мероприятия.",
+    ),
+    create=extend_schema(
+        summary="Создать место мероприятия",
+        description="Создает новое место для мероприятия.",
+    ),
+    update=extend_schema(
+        summary="Обновить место мероприятия",
+        description="Обновляет данные места для мероприятия.",
+    ),
+    partial_update=extend_schema(
+        summary="Частично обновить место мероприятия",
+        description="Обновляет только переданные поля места мероприятия",
+    ),
+    destroy=extend_schema(
+        summary="Удалить место мероприятия",
+        description="Удаляет место для мероприятия.",
+    ),
+)
 class EventPlaceViewSet(ModelViewSet):
+    """ViewSet для управления местами для мероприятий."""
+
     queryset = EventPlace.objects.all()
     serializer_class = EventPlaceSerializer
     permission_classes = [IsAdminUser]
 
 
+@extend_schema_view(
+    list=extend_schema(
+        summary="Список мероприятий",
+        description="Возвращает список всех мероприятий. Доступны фильтры и поиск..",
+    ),
+    retrieve=extend_schema(
+        summary="Получить мероприятие",
+        description="Возвращает данные конкретного мероприятия.",
+    ),
+    create=extend_schema(
+        summary="Создать мероприятие",
+        description="Создает новое мероприятие.",
+    ),
+    update=extend_schema(
+        summary="Обновить мероприятие",
+        description="Обновляет данные мероприятия.",
+    ),
+    partial_update=extend_schema(
+        summary="Частично обновить мероприятие",
+        description="Обновляет только переданные поля мероприятия.",
+    ),
+    destroy=extend_schema(
+        summary="Удалить мероприятие",
+        description="Удаляет мероприятие.",
+    ),
+)
 class EventViewSet(ModelViewSet):
+    """ViewSet для работы с мероприятиями."""
+
     queryset = Event.objects.all()
     serializer_class = EventSerializer
     permission_classes = [EventPermission]
@@ -53,6 +111,12 @@ class EventViewSet(ModelViewSet):
             )
         return qs
 
+    @extend_schema(
+        summary="Экспорт мероприятий",
+        description="""Скачать .xlsx файл с мероприятиями.
+        Доступны фильтры из параметров запроса /events/?.""",
+        responses={200: OpenApiTypes.OBJECT},
+    )
     @action(
         detail=False,
         methods=["GET"],
@@ -69,7 +133,27 @@ class EventViewSet(ModelViewSet):
         return FileResponse(new_xlsx, as_attachment=True, filename=file_name)
 
 
+@extend_schema_view(
+    list=extend_schema(
+        summary="Список изображений для мероприятий",
+        description="Возвращает список всех изображений.",
+    ),
+    retrieve=extend_schema(
+        summary="Получить конкретное изображение для мероприятия",
+        description="Возвращает данные конкретного уведомления для мероприятия.",
+    ),
+    create=extend_schema(
+        summary="Загрузить изображение для мероприятия",
+        description="Загружает новое изображение для мероприятия.",
+    ),
+    destroy=extend_schema(
+        summary="Удалить изображение мероприятия",
+        description="Удаляет изображение для мероприятия.",
+    ),
+)
 class EventImageViewSet(ModelViewSet):
+    """ViewSet для работы с изображениями для мероприятий."""
+
     queryset = EventImage.objects.all()
     serializer_class = EventImageSerializer
     permission_classes = [EventImagePermission]
@@ -87,7 +171,35 @@ class EventImageViewSet(ModelViewSet):
         return qs
 
 
+@extend_schema_view(
+    list=extend_schema(
+        summary="Список настроек уведомлений для мероприятий",
+        description="Возвращает список всех уведомлений.",
+    ),
+    retrieve=extend_schema(
+        summary="Получить уведомление для мероприятия",
+        description="Возвращает данные конкретного уведомления для мероприятия.",
+    ),
+    create=extend_schema(
+        summary="Создать уведомление для мероприятия",
+        description="Создает новое уведомление для мероприятия.",
+    ),
+    update=extend_schema(
+        summary="Обновить уведомление для мероприятия",
+        description="Обновляет данные уведомления для мероприятия.",
+    ),
+    partial_update=extend_schema(
+        summary="Частично обновить уведомление для мероприятия",
+        description="Обновляет только переданные поля уведомления для мероприятия",
+    ),
+    destroy=extend_schema(
+        summary="Удалить уведомление мероприятия",
+        description="Удаляет уведомление для мероприятия.",
+    ),
+)
 class EventNotificationViewSet(ModelViewSet):
+    """ViewSet для работы с уведомлениями о мероприятиях."""
+
     queryset = EventNotification.objects.all()
     serializer_class = EventNotificationSerializer
     permission_classes = [IsAdminUser]
@@ -101,7 +213,13 @@ class EventNotificationViewSet(ModelViewSet):
         return qs
 
 
+@extend_schema(
+    summary="Импортировать меропритятия",
+    description="Принимает .xlsx файл с мероприятиями.",
+)
 class ImportEventAPIView(generics.CreateAPIView):
+    """Эндпоинт для загрузки пользовательского .xlsx файла с мероприятиями."""
+
     # Делаю отдельную вьюшку, чтобы нормально отрендерилось поле с выбором файла
     serializer_class = EventImportSerializer
     permission_classes = [IsAdminUser]

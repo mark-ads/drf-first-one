@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 from rest_framework.serializers import ValidationError
 
@@ -47,6 +48,7 @@ class EventPlaceWithWeatherSerializer(EventPlaceSerializer):
     class Meta(EventPlaceSerializer.Meta):
         fields = EventPlaceSerializer.Meta.fields + ["weather_forecast"]
 
+    @extend_schema_field(WeatherForecastSerializer)
     def get_weather_forecast(self, _):
         event = self.context.get("event")
         if not event:
@@ -95,12 +97,19 @@ class EventSerializer(serializers.ModelSerializer):
             "status",
         ]
 
+    @extend_schema_field(
+        {
+            "type": "object",
+            "properties": {"id": {"type": "integer"}, "username": {"type": "string"}},
+        }
+    )
     def get_author_info(self, object):
         return {
             "id": object.author.id,
             "username": object.author.username,
         }
 
+    @extend_schema_field(EventPlaceWithWeatherSerializer)
     def get_place_info(self, object):
         serializer = EventPlaceWithWeatherSerializer(
             object.place, context={"event": object}
