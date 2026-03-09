@@ -10,11 +10,37 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
+
+import os
 from pathlib import Path
+
+from dotenv import load_dotenv
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+load_dotenv(BASE_DIR / '.env')
+
+DOCKER_RUN = os.getenv('DOCKER_RUN')
+DB_PORT = os.getenv('DB_PORT')
+DB_HOST = os.getenv('DB_HOST')
+DB_NAME = os.getenv('DB_NAME')
+DB_USER = os.getenv('DB_USER')
+DB_PASS = os.getenv('DB_PASS')
+REDIS_HOST = os.getenv('REDIS_HOST')
+REDIS_PORT = os.getenv('REDIS_PORT')
+PER_PAGE_PAGINATION = os.getenv('PER_PAGE_PAGINATION')
+TASKS_WEATHER_UPDATE_DELAY_MIN = os.getenv('WEATHER_UPDATE_DELAY_MIN')
+
+if isinstance(TASKS_WEATHER_UPDATE_DELAY_MIN, str):
+    TASKS_WEATHER_UPDATE_DELAY_MIN = int(TASKS_WEATHER_UPDATE_DELAY_MIN)
+else:
+    TASKS_WEATHER_UPDATE_DELAY_MIN = 5
+
+if DOCKER_RUN != 'True':
+    DB_HOST = '127.0.0.1'
+    REDIS_HOST = 'localhost'
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
@@ -74,7 +100,7 @@ WSGI_APPLICATION = 'first_one.wsgi.application'
 
 # DATABASES = {
 #     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
+#         'ENGINE': 'django.db.backends.sqlite3',
 #         'NAME': BASE_DIR / 'db.sqlite3',
 #     }
 # }
@@ -82,11 +108,11 @@ WSGI_APPLICATION = 'first_one.wsgi.application'
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": "union_db",
-        "USER": "mark",
-        "PASSWORD": "teabrain",
-        "HOST": "127.0.0.1",
-        "PORT": "5432",
+        "NAME": DB_NAME,
+        "USER": DB_USER,
+        "PASSWORD": DB_PASS,
+        "HOST": DB_HOST,
+        "PORT": DB_PORT,
     }
 }
 
@@ -155,7 +181,7 @@ REST_FRAMEWORK = {
         'django_filters.rest_framework.DjangoFilterBackend',
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 2,  # пока что 2 для тестов работоспособности
+    'PAGE_SIZE': PER_PAGE_PAGINATION,
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     
 }
@@ -167,6 +193,6 @@ SPECTACULAR_SETTINGS = {
     'SERVE_INCLUDE_SCHEMA': False,
 }
 
-CELERY_BROKER_URL = 'redis://localhost:6379/0'
-CELERY_RESULT_BACKEND = 'redis://localhost:6379/1'
+CELERY_BROKER_URL = f'redis://{REDIS_HOST}:{REDIS_PORT}/0'
+CELERY_RESULT_BACKEND = f'redis://{REDIS_HOST}:{REDIS_PORT}/1'
 CELERY_ACCEPT_CONTENT = ['json']
