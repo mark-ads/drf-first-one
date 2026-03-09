@@ -23,7 +23,7 @@ services:
       - .env
     volumes:
       - .:/app
-    command: sh -c "sleep ${WAIT_PG_SEC} && celery -A first_one worker -P solo -l info"
+    command: sh -c "sleep ${WAIT_PG_SEC} && sleep 5 && celery -A first_one worker -P solo -l info"
     depends_on:
      - redis
      - postgres
@@ -34,7 +34,7 @@ services:
       - .env
     volumes:
       - .:/app
-    command: sh -c "sleep ${WAIT_PG_SEC} && celery -A first_one beat -l info"
+    command: sh -c "sleep ${WAIT_PG_SEC} && sleep 5 && celery -A first_one beat -l info"
     depends_on:
      - redis
      - postgres
@@ -45,7 +45,7 @@ services:
     build: .
     ports:
       - "8000:8000"
-    command: sh -c "sleep ${WAIT_PG_SEC} && python manage.py migrate && python manage.py populate_db && python manage.py runserver 0.0.0.0:8000"
+    command: sh -c "sleep ${WAIT_PG_SEC} && python manage.py makemigrations && python manage.py migrate && python manage.py populate_db && python manage.py runserver 0.0.0.0:8000"
     depends_on:
       - postgres
       - redis
