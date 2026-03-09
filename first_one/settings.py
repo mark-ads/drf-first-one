@@ -132,19 +132,10 @@ MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / 'media'
 
 INSTALLED_APPS += [
-    'debug_toolbar',
     'rest_framework',
     'first_one.first_app',
     'drf_spectacular',
     'django_filters',
-]
-
-MIDDLEWARE = [
-    'debug_toolbar.middleware.DebugToolbarMiddleware'
-] + MIDDLEWARE
-
-INTERNAL_IPS = [
-    '127.0.0.1',
 ]
 
 REST_FRAMEWORK = {
