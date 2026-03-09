@@ -1,8 +1,54 @@
 version: "3.9"
 
 services:
+  postgres:
+    image: postgres:16
+    environment:
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASS}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:${DB_PORT}"
+   
   redis:
     image: redis:7
-    container_name: redis
     ports:
-      - "6379:6379"
+      - "6379:${REDIS_PORT}"
+
+  celery_worker:
+    build: .
+    env_file: 
+      - .env
+    volumes:
+      - .:/app
+    command: sh -c "sleep ${WAIT_PG_SEC} && celery -A first_one worker -P solo -l info"
+    depends_on:
+     - redis
+     - postgres
+
+  celery_beat:
+    build: .
+    env_file: 
+      - .env
+    volumes:
+      - .:/app
+    command: sh -c "sleep ${WAIT_PG_SEC} && celery -A first_one beat -l info"
+    depends_on:
+     - redis
+     - postgres
+
+  django:
+    env_file: 
+      - .env
+    build: .
+    ports:
+      - "8000:8000"
+    command: sh -c "sleep ${WAIT_PG_SEC} && python manage.py migrate && python manage.py populate_db && python manage.py runserver 0.0.0.0:8000"
+    depends_on:
+      - postgres
+      - redis
+
+volumes:
+  postgres_data:
