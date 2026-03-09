@@ -67,7 +67,9 @@ class Command(BaseCommand):
 
                     event.delete()
 
-            place_idx = i if i < 3 else 0  # чтобы 4 ивенту назначилось [0] место проведения
+            place_idx = (
+                i if i < 3 else 0
+            )  # чтобы 4 ивенту назначилось [0] место проведения
             place = EventPlace.objects.get(name=places_names[place_idx])
 
             if now < event_dates[i] - timedelta(days=10):
@@ -92,11 +94,13 @@ class Command(BaseCommand):
             )
 
             for j in range(2):
-                if i > 2:  # 4 ивент остаётся без картинок 
+                if i > 2:  # 4 ивент остаётся без картинок
                     break
 
                 file_name = f"{i}_{j}.jpg"
-                img_path = Path(settings.BASE_DIR) / "sample_data" / file_name
+                img_path = (
+                    Path(settings.BASE_DIR) / "sample_data" / "images" / file_name
+                )
 
                 if not EventImage.objects.filter(
                     event=event,
@@ -107,15 +111,14 @@ class Command(BaseCommand):
                             event=event, image=File(f, name=f"{i}_{j}.jpg")
                         )
 
-
         if EventNotification.objects.all().exists():
             EventNotification.objects.all().delete()
 
         event = Event.objects.filter(status=Event.StatusChoices.DRAFT).first()
-        
+
         EventNotification.objects.create(
             event=event,
-            recipients=['first@example.com', 'second@example.com'],
-            email_subject='Пример темы письма',
-            email_text='Приглашаем на мероприятие',
+            recipients=["first@example.com", "second@example.com"],
+            email_subject="Пример темы письма",
+            email_text="Приглашаем на мероприятие",
         )
