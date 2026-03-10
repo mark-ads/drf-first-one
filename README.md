@@ -22,10 +22,19 @@
 
 ## Инструкция по разворачиванию проекта:
 
-1) клонировать репозиторий;
+1) клонировать репозиторий 'git clone https://github.com/mark-ads/drf-first-one.git';
 2) ввести команду в терминал 'docker-compose build';
 3) ввести команду в терминал 'docker-compose up';
 4) для завершения приложения 'docker-compose down -v';
+
+Проект будет доступен по адресу:
+
+http://localhost:8000/api/ (Browsable API)
+
+или 
+
+http://localhost:8000/api/docs/swagger/ (Swagger)
+
 
 Если контейнер с PosgreSQL не успевает развернуться раньше контейнеров с проектом,
 то нужно в файле .env увеличить показатель WAIT_PG_SEC до 10 или 20 секунд.
