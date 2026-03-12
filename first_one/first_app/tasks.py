@@ -1,8 +1,10 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 
 import requests
 from celery import shared_task
+from django.conf import settings
+from django.core.mail import send_mail
 
 from first_one.first_app.models import Event, EventNotification, WeatherForecast
 from first_one.first_app.utils import create_preview
@@ -84,11 +86,17 @@ def send_email_notification(notification_id: int):
 
     notification = EventNotification.objects.get(id=notification_id)
     email_list = notification.recipients
-    subject = notification.email_subject
-    text = notification.email_text
+    subject = notification.email_subject or "Нет темы"
+    text = notification.email_text or ""
 
-    for email in email_list:
-        print(f"Отправлен email по адресу {email}, тема {subject}, текст {text}")
+    send_mail(
+        subject=subject,
+        message=text,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=email_list,
+        fail_silently=True,
+    )
+    print('Письма отправлены')
 
 
 @shared_task
@@ -129,12 +137,12 @@ def check_preview_availability():
         first_image = image_list[0].image if image_list else None
 
         if not first_image and not event.preview:
-            print(f'Отсутствует превью для {event.name}')
+            print(f"Отсутствует превью для {event.name}")
             continue
 
         if not first_image and event.preview:
             event.preview.delete()
-            print(f'Удаляем превью для {event.name}')
+            print(f"Удаляем превью для {event.name}")
             continue
 
         if first_image and event.preview:
@@ -142,10 +150,10 @@ def check_preview_availability():
 
             if expected_name == Path(event.preview.name).name:
                 # Название изображения соответствует названию превью.
-                print(f'Превью соответствует для {event.name}')
+                print(f"Превью соответствует для {event.name}")
                 continue
 
-            print(f'Удаление превью. Не соответствует для {event.name}')
+            print(f"Удаление превью. Не соответствует для {event.name}")
             event.preview.delete()
 
         # Либо превью нет, либо оно не соовпадает по названию.
@@ -153,4 +161,4 @@ def check_preview_availability():
             new_image = create_preview(first_image.path)
             new_name = f"prev_{Path(first_image.name).name}"
             event.preview.save(new_name, new_image, save=True)
-            print(f'Создано превью {new_name}, для {event.name}')
+            print(f"Создано превью {new_name}, для {event.name}")
