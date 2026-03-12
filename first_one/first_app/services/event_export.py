@@ -1,3 +1,4 @@
+import logging
 from io import BytesIO
 from typing import cast
 
@@ -7,6 +8,8 @@ from openpyxl.worksheet.worksheet import Worksheet
 
 from first_one.first_app.models import Event
 
+logger = logging.getLogger("first_app")
+
 
 class EventExportService:
     def __init__(self, queryset: QuerySet[Event]):
@@ -14,6 +17,7 @@ class EventExportService:
 
     def run(self) -> BytesIO:
         """Создает XLSX файл и возвращает как BytesIO."""
+        logger.debug("Старт экспорта мероприятий")
         workbook = Workbook()
         sheet = cast(Worksheet, workbook.active)  # cast, чтобы подсказать тип LSP
         sheet.title = "Events"
@@ -50,4 +54,5 @@ class EventExportService:
         workbook.save(new_file)  # сохраняем в буфер
         new_file.seek(0)  # возвращаем указатель буфера в начало файла
 
+        logger.info("Мероприятия экспортированы.")
         return new_file

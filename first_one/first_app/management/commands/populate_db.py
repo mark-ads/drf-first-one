@@ -8,6 +8,8 @@ from django.core.management import BaseCommand
 
 from first_one.first_app.models import Event, EventImage, EventNotification, EventPlace
 
+import logging
+logger = logging.getLogger('first_app')
 
 class Command(BaseCommand):
     help = "Наполнить БД тестовыми примерами."
@@ -63,8 +65,10 @@ class Command(BaseCommand):
                 for event in Event.objects.filter(name=event_names[i]):
                     # Вложенный цикл удаления изображений мероприятия
                     for image in event.images.all():  # type: ignore
+                        logger.debug('populate_db: Удаление изображения %s', image)
                         image.delete()
 
+                    logger.debug('populate_db: Удаление мероприятия %s', event.name)
                     event.delete()
 
             place_idx = (
@@ -122,3 +126,4 @@ class Command(BaseCommand):
             email_subject="Пример темы письма",
             email_text="Приглашаем на мероприятие",
         )
+        logger.info('populate_db выполнен')

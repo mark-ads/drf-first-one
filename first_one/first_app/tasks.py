@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -8,6 +9,9 @@ from django.core.mail import send_mail
 
 from first_one.first_app.models import Event, EventNotification, WeatherForecast
 from first_one.first_app.utils import create_preview
+
+logger = logging.getLogger("celery")
+
 
 WEATHER_URL = "https://api.open-meteo.com/v1/forecast"
 
@@ -27,6 +31,7 @@ def update_weather_task():
     Данные о погоде сохраняются в модель WeatherForecast.
     """
 
+    logger.debug("Старт update_weather_task %s")
     # Ограничение на прогноз погоды, нельзя запрашивать дальше чем на 10 дней
     current_time = datetime.now()
     max_date = current_time + timedelta(days=10)
@@ -48,7 +53,7 @@ def update_weather_task():
             "timezone": "Asia/Bangkok",
         }
 
-        print(f"Старт получения прогноза для {event.name}")
+        logger.debug("Запрос к АПИ сервиса погоды %s", event.name)
         response = requests.get(WEATHER_URL, params=params, timeout=10)
 
         response.raise_for_status()
@@ -91,6 +96,7 @@ def update_weather_task():
 def send_email_notification(notification_id: int):
     """Отправить уведомления на имейл всем получателям."""
 
+    logger.debug("Старт отправки уведомлений")
     notification = EventNotification.objects.get(id=notification_id)
     email_list = notification.recipients
     subject = notification.email_subject or "Нет темы"
@@ -103,7 +109,8 @@ def send_email_notification(notification_id: int):
         recipient_list=email_list,
         fail_silently=True,
     )
-    print("Письма отправлены")
+    event = Event.objects.get(notification.event)
+    logger.info("Уведомления отправлены %s", event.name)
 
 
 @shared_task
@@ -112,12 +119,12 @@ def check_event_status():
 
     for event in events:
         if event.publish_date <= datetime.now():
-            print(f"Поменялся статус ивента {event.name}")
+            logger.info("Поменялся статус ивента", event.name)
             event.status = Event.StatusChoices.PUBLISHED
             event.save(update_fields=["status"])
 
             if EventNotification.objects.filter(event=event).exists():
-                print("Отдаем задачу на отправку уведомления")
+                logger.debug("Создана задача на отправку уведомления %s", event.name)
                 notification = EventNotification.objects.get(event=event)
                 send_email_notification.delay(notification.id)  # type: ignore
 
@@ -144,12 +151,12 @@ def check_preview_availability():
         first_image = image_list[0].image if image_list else None
 
         if not first_image and not event.preview:
-            print(f"Отсутствует превью для {event.name}")
+            logger.debug("Отсутствует превью для %s", event.name)
             continue
 
         if not first_image and event.preview:
             event.preview.delete()
-            print(f"Удаляем превью для {event.name}")
+            logger.info("Удалено превью %s", event.name)
             continue
 
         if first_image and event.preview:
@@ -157,10 +164,10 @@ def check_preview_availability():
 
             if expected_name == Path(event.preview.name).name:
                 # Название изображения соответствует названию превью.
-                print(f"Превью соответствует для {event.name}")
+                logger.debug("Превью соответствует %s", event.name)
                 continue
 
-            print(f"Удаление превью. Не соответствует для {event.name}")
+            logger.info("Удаление несоответствующего превью %s", event.name)
             event.preview.delete()
 
         # Либо превью нет, либо оно не соовпадает по названию.
@@ -168,4 +175,4 @@ def check_preview_availability():
             new_image = create_preview(first_image.path)
             new_name = f"prev_{Path(first_image.name).name}"
             event.preview.save(new_name, new_image, save=True)
-            print(f"Создано превью {new_name}, для {event.name}")
+            logger.info(f"Создано превью {new_name}, для {event.name}")

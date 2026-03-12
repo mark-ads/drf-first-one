@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 
 from django.http import FileResponse
@@ -26,6 +27,8 @@ from first_one.first_app.serializers import (
 )
 from first_one.first_app.services.event_export import EventExportService
 from first_one.first_app.services.event_import import EventImportService
+
+logger = logging.getLogger("first_app")
 
 
 @extend_schema_view(
@@ -60,6 +63,41 @@ class EventPlaceViewSet(ModelViewSet):
     queryset = EventPlace.objects.all()
     serializer_class = EventPlaceSerializer
     permission_classes = [IsAdminUser]
+
+    def create(self, request, *args, **kwargs):
+        response = super().create(request, *args, **kwargs)
+        if response.status_code == 201:
+            logger.info(f"Создано новое место: {response.data.get('name')}")  # type: ignore
+        else:
+            logger.warning(f"Не удалось создать место: {response.data}")
+        return response
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        response = super().update(request, *args, **kwargs)
+        if response.status_code == 200:
+            logger.info(f"Место обновлено: {response.data.get('name')}")
+        else:
+            logger.warning(f'Не удалось обновить место "{response.data}"')
+        return response
+
+    def partial_update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        response = super().partial_update(request, *args, **kwargs)
+        if response.status_code in (200, 204):
+            logger.info(f"Частично обновлено место: {instance.name})")
+        else:
+            logger.warning(f"Не удалось частично обновить место {response.data}")
+        return response
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        response = super().destroy(request, *args, **kwargs)
+        if response.status_code in (200, 204):
+            logger.info(f"Место удалено {instance.name}")
+        else:
+            logger.warning(f"Не удалось удалить место {response.data}")
+        return response
 
 
 @extend_schema_view(
@@ -132,6 +170,41 @@ class EventViewSet(ModelViewSet):
         file_name = f"events_export_{current_time}.xlsx"
         return FileResponse(new_xlsx, as_attachment=True, filename=file_name)
 
+    def create(self, request, *args, **kwargs):
+        response = super().create(request, *args, **kwargs)
+        if response.status_code == 201:
+            logger.info(f"Создано новое мероприятие: {response.data.get('name')}")  # type: ignore
+        else:
+            logger.warning(f"Не удалось создать мероприятие: {response.data}")
+        return response
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        response = super().update(request, *args, **kwargs)
+        if response.status_code == 200:
+            logger.info(f"Мероприятие обновлено: {response.data.get('name')}")
+        else:
+            logger.warning(f'Не удалось обновить мероприятие "{response.data}"')
+        return response
+
+    def partial_update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        response = super().partial_update(request, *args, **kwargs)
+        if response.status_code in (200, 204):
+            logger.info(f"Частично обновлено мероприятие: {instance.name})")
+        else:
+            logger.warning(f"Не удалось частично обновить мероприятие {response.data}")
+        return response
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        response = super().destroy(request, *args, **kwargs)
+        if response.status_code in (200, 204):
+            logger.info(f"Мероприятие удалено {instance.name}")
+        else:
+            logger.warning(f"Не удалось удалить мероприятие {response.data}")
+        return response
+
 
 @extend_schema_view(
     list=extend_schema(
@@ -169,6 +242,23 @@ class EventImageViewSet(ModelViewSet):
                 ]
             )
         return qs
+
+    def create(self, request, *args, **kwargs):
+        response = super().create(request, *args, **kwargs)
+        if response.status_code == 201:
+            logger.info(f"Добавлено новое изображение: {response.data.get('image')}")  # type: ignore
+        else:
+            logger.warning(f"Не удалось добавить изображение: {response.data}")
+        return response
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        response = super().destroy(request, *args, **kwargs)
+        if response.status_code in (200, 204):
+            logger.info(f"Изображение удалено {instance}")
+        else:
+            logger.warning(f"Не удалось удалить изображение {response.data}")
+        return response
 
 
 @extend_schema_view(
@@ -211,6 +301,41 @@ class EventNotificationViewSet(ModelViewSet):
         qs = qs.filter(event__status=Event.StatusChoices.DRAFT)
 
         return qs
+
+    def create(self, request, *args, **kwargs):
+        response = super().create(request, *args, **kwargs)
+        if response.status_code == 201:
+            logger.info(f"Добавлено новое уведомление: {response.data.get('event')}")  # type: ignore
+        else:
+            logger.warning(f"Не удалось добавить уведомление: {response.data}")
+        return response
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        response = super().update(request, *args, **kwargs)
+        if response.status_code == 200:
+            logger.info(f"Уведомление обновлено: {response.data.get('event')}")
+        else:
+            logger.warning(f'Не удалось обновить уведомление "{response.data}"')
+        return response
+
+    def partial_update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        response = super().partial_update(request, *args, **kwargs)
+        if response.status_code in (200, 204):
+            logger.info(f"Частично обновлено уведомление: {instance.event})")
+        else:
+            logger.warning(f"Не удалось частично обновить уведомление {response.data}")
+        return response
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        response = super().destroy(request, *args, **kwargs)
+        if response.status_code in (200, 204):
+            logger.info(f"Изображение удалено {instance.event}")
+        else:
+            logger.warning(f"Не удалось удалить изображение {response.data}")
+        return response
 
 
 @extend_schema(

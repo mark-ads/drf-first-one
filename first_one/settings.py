@@ -16,9 +16,12 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
+LOG_LEVELS = ('DEBUG', 'INFO', 'WARN', 'ERROR', 'CRITICAL')
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+LOG_DIR = BASE_DIR / 'logs'
+LOG_DIR.mkdir(exist_ok=True)
 
 load_dotenv(BASE_DIR / '.env')
 
@@ -35,6 +38,14 @@ REDIS_PORT = os.getenv('REDIS_PORT')
 PER_PAGE_PAGINATION = os.getenv('PER_PAGE_PAGINATION')
 WEATHER_UPDATE_DELAY_MIN = os.getenv('WEATHER_UPDATE_DELAY_MIN')
 PREVIEW_CHECK_DELAY_MIN = os.getenv('PREVIEW_CHECK_DELAY_MIN')
+DJANGO_LEVEL = os.getenv('DJANGO_LEVEL')
+CELERY_LEVEL = os.getenv('CELERY_LEVEL')
+
+if DJANGO_LEVEL not in LOG_LEVELS:
+    DJANGO_LEVEL = 'INFO'
+
+if CELERY_LEVEL not in LOG_LEVELS:
+    CELERY_LEVEL = 'INFO'
 
 
 if not SECRET_KEY:
@@ -196,6 +207,59 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': PER_PAGE_PAGINATION,
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     
+}
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {name} {message}',
+            'style': '{',
+        },
+        'short': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'short',
+        },
+        'django_file': {
+            'class': 'logging.FileHandler',
+            'filename': LOG_DIR / 'app.log',
+            'formatter': 'verbose',
+        },
+        'app_file': {
+            'class': 'logging.FileHandler',
+            'filename': LOG_DIR / 'first_app.log'
+
+        },
+        'celery_file': {
+            'class': 'logging.FileHandler',
+            'filename': LOG_DIR / 'celery.log',
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console', 'django_file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'first_app': {
+            'handlers': ['console', 'app_file'],
+            'level': DJANGO_LEVEL,
+            'propagate': False,
+        },
+        'celery': {
+            'handlers': ['console', 'celery_file'],
+            'level': CELERY_LEVEL,
+            'propagate': True,
+        },
+    },
 }
 
 SPECTACULAR_SETTINGS = {

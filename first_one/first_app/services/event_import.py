@@ -1,3 +1,4 @@
+import logging
 from typing import cast
 
 from django.core.files.uploadedfile import InMemoryUploadedFile
@@ -7,6 +8,8 @@ from openpyxl.worksheet.worksheet import Worksheet
 
 from first_one.first_app.models import Event, EventPlace
 from first_one.first_app.serializers import EventPlaceSerializer, EventSerializer
+
+logger = logging.getLogger("first_app")
 
 
 class EventImportService:
@@ -21,10 +24,12 @@ class EventImportService:
         return cast(Worksheet, self.workbook.active)  # указываем тип для LSP
 
     def run(self):
+        logger.debug("Старт импорта мероприятий")
         for row_number, row in enumerate(
             self.sheet.iter_rows(min_row=2, values_only=True), start=2
         ):
             if len(row) < 9:
+                logger.debug(f"Ошибка импорта в строке {row_number}")
                 self.errors.append({"row_number": row_number})
                 continue
 
@@ -59,9 +64,11 @@ class EventImportService:
                 serializer = EventPlaceSerializer(data=place_data)
 
                 if serializer.is_valid():
+                    logger.info(f"Создано новое место из импорта {place_name}")
                     place = serializer.save()
 
                 else:
+                    logger.debug(f"Ошибка создания места из импорта {place_name}")
                     self.errors.append(
                         {"row_number": row_number, "errors": serializer.errors}
                     )
@@ -83,6 +90,7 @@ class EventImportService:
             )
 
             if serializer.is_valid():
+                logger.info(f"Создано новое мероприятие из импорта {event_name}")
                 serializer.save()
                 self.created += 1
             else:
@@ -91,4 +99,7 @@ class EventImportService:
                 )
 
         self.workbook.close()
+        logger.info(
+            f"Импорт мероприятий завершен. Создано {self.created}, ошибок: {len(self.errors)}"
+        )
         return {"created": self.created, "errors": self.errors}

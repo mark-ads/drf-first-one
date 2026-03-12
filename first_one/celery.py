@@ -1,3 +1,4 @@
+import logging
 import os
 from datetime import timedelta
 
@@ -5,6 +6,9 @@ from celery import Celery
 from django.conf import settings
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "first_one.settings")
+
+logger = logging.getLogger("celery")
+logger.debug("Старт Celery")
 
 app = Celery(main="tasks")
 
@@ -21,8 +25,8 @@ app.conf.beat_schedule = {
         "task": "first_one.first_app.tasks.check_event_status",
         "schedule": timedelta(minutes=1),
     },
-    'preview_check': {
-        'task': 'first_one.first_app.tasks.check_preview_availability',
-        'schedule': timedelta(minutes=settings.PREVIEW_CHECK_DELAY_MIN)
-    }
+    "preview_check": {
+        "task": "first_one.first_app.tasks.check_preview_availability",
+        "schedule": timedelta(minutes=settings.PREVIEW_CHECK_DELAY_MIN),
+    },
 }
