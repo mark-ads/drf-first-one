@@ -22,7 +22,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 load_dotenv(BASE_DIR / '.env')
 
+SECRET_KEY = os.getenv('SECRET_KEY')
 DOCKER_RUN = os.getenv('DOCKER_RUN')
+DEBUG_MODE = os.getenv('DEBUG_MODE')
 DB_PORT = os.getenv('DB_PORT')
 DB_HOST = os.getenv('DB_HOST')
 DB_NAME = os.getenv('DB_NAME')
@@ -33,23 +35,26 @@ REDIS_PORT = os.getenv('REDIS_PORT')
 PER_PAGE_PAGINATION = os.getenv('PER_PAGE_PAGINATION')
 TASKS_WEATHER_UPDATE_DELAY_MIN = os.getenv('WEATHER_UPDATE_DELAY_MIN')
 
+if not SECRET_KEY:
+    raise RuntimeError('Django SECRET_KEY не установлен.')
+
 if isinstance(TASKS_WEATHER_UPDATE_DELAY_MIN, str):
     TASKS_WEATHER_UPDATE_DELAY_MIN = int(TASKS_WEATHER_UPDATE_DELAY_MIN)
 else:
     TASKS_WEATHER_UPDATE_DELAY_MIN = 5
 
 if DOCKER_RUN != 'True':
-    DB_HOST = '127.0.0.1'
+    DB_HOST = 'localhost'
     REDIS_HOST = 'localhost'
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-lyn%b7h9tw!wxuym00x3g3q&xm&s#io-rk38s)z=5uy_6j5vfc'
+SECRET_KEY = SECRET_KEY
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = DEBUG_MODE == 'True'
 
 ALLOWED_HOSTS = []
 
