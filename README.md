@@ -23,6 +23,7 @@
 ## Инструкция по разворачиванию проекта:
 
 1) клонировать репозиторий 'git clone https://github.com/mark-ads/drf-first-one.git';
+2) создать .env по шаблону из .env.example (можно переименовать)
 2) ввести команду в терминал 'docker-compose build';
 3) ввести команду в терминал 'docker-compose up';
 4) для завершения приложения 'docker-compose down -v';
@@ -41,18 +42,25 @@ http://localhost:8000/api/docs/swagger/ (Swagger)
 
 ### В файле .env можно настроить:
 
+- DOCKER_RUN - True если запуск в Docker, False если на локальной машине;
+- DJANGO_PORT - на каком порту запустить Django
 - PER_PAGE_PAGINATION - количество объектов на странице (пагинация);
 - POPULATE_DB - нужно ли наполнять БД перед запуском;
-- DOCKER_RUN - True если запуск в Docker, False если на локальной машине;
 - WEATHER_UPDATE_DELAY_MIN - интервалы между запросами прогноза погоды;
 
 Остальные настройки для контейнеров.
 
 ### Запустить тесты АПИ:
-Запускаются на локальной машине. В файле .env поменять значение DOCKER_RUN=False.
+Запускаются на локальной машине. В файле .env поменять следующие значения:
+
+- DOCKER_RUN=False;
+- DB_HOST=localhost;
+- REDIS_HOST=localhost;
+ 
 Нужен развернутый Postgres, настроить подключение можно в .env.
 
 Команды для терминала, (нужно находиться в корне проекта):
+
 - python -m venv .venv
 - .venv\Scripts\activate (для Windows)
 - source .venv/bin/activate (для Linux)
