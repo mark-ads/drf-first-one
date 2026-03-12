@@ -1,10 +1,6 @@
-from pathlib import Path
-
 from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-
-from first_one.first_app.utils import create_preview
 
 User = get_user_model()
 
@@ -76,35 +72,9 @@ class EventImage(models.Model):
     def __str__(self):
         return f"{self.event.name} - {getattr(self, 'id', 'unsaved')}"
 
-    def save(self, *args, **kwargs):
-        is_new = self.pk is None
-
-        super().save(*args, **kwargs)
-
-        if is_new and not self.event.preview:
-            new_image = create_preview(self.image.path)
-            new_name = f"prev_{Path(self.image.name).name}"
-            self.event.preview.save(new_name, new_image, save=True)
-
     def delete(self, *args, **kwargs):
-        """Удалить изображение из БД и диска. Обновить превью, если нужно."""
-
-        # Проверяем на наличие превью и сходятся ли окончания названия файлов
-        if self.event.preview and self.event.preview.name.endswith(
-            Path(self.image.name).name
-        ):
-            self.event.preview.delete(save=False)
-
-            other_image = self.event.images.exclude(pk=self.pk).first()
-            if other_image:
-                new_image = create_preview(other_image.image.path)
-                new_name = f"prev_{Path(other_image.image.name).name}"
-                self.event.preview.save(new_name, new_image, save=False)
-            self.event.save()
-
         if self.image:
             self.image.delete(save=False)
-
         return super().delete(*args, **kwargs)
 
     class Meta:

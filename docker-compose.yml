@@ -20,8 +20,8 @@ services:
     env_file: 
       - .env
     volumes:
-      - .:/app
-    command: sh -c "sleep ${WAIT_PG_SEC} && sleep 5 && celery -A first_one worker -P solo -l info"
+      - media:/app/media
+    command: sh -c "sleep ${WAIT_PG_SEC} && sleep 10 && celery -A first_one worker -P solo -l info"
     depends_on:
      - redis
      - postgres
@@ -31,8 +31,8 @@ services:
     env_file: 
       - .env
     volumes:
-      - .:/app
-    command: sh -c "sleep ${WAIT_PG_SEC} && sleep 5 && celery -A first_one beat -l info"
+      - media:/app/media
+    command: sh -c "sleep ${WAIT_PG_SEC} && sleep 10 && celery -A first_one beat -l info"
     depends_on:
      - redis
      - postgres
@@ -43,6 +43,8 @@ services:
     build: .
     ports:
       - "${DJANGO_PORT}:${DJANGO_PORT}"
+    volumes:
+      - media:/app/media
     command: sh -c "sleep ${WAIT_PG_SEC} && python manage.py makemigrations && python manage.py migrate && python manage.py populate_db && python manage.py runserver 0.0.0.0:${DJANGO_PORT}"
     depends_on:
       - postgres
@@ -50,3 +52,4 @@ services:
 
 volumes:
   postgres_data:
+  media:
