@@ -27,9 +27,16 @@ def update_weather_task():
     Данные о погоде сохраняются в модель WeatherForecast.
     """
 
-    events = Event.objects.filter(status=Event.StatusChoices.PUBLISHED).select_related(
-        "place"
-    )
+    # Ограничение на прогноз погоды, нельзя запрашивать дальше чем на 10 дней
+    current_time = datetime.now()
+    max_date = current_time + timedelta(days=10)
+
+    # Фильтруем так же в диапазоне максимальной даты для прогноза
+    events = Event.objects.filter(
+        status=Event.StatusChoices.PUBLISHED,
+        start_date__gte=current_time,
+        start_date__lte=max_date,
+    ).select_related("place")
 
     for event in events:
         params = {
@@ -96,7 +103,7 @@ def send_email_notification(notification_id: int):
         recipient_list=email_list,
         fail_silently=True,
     )
-    print('Письма отправлены')
+    print("Письма отправлены")
 
 
 @shared_task
