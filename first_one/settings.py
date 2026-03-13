@@ -234,8 +234,8 @@ LOGGING = {
         },
         'app_file': {
             'class': 'logging.FileHandler',
-            'filename': LOG_DIR / 'first_app.log'
-
+            'filename': LOG_DIR / 'first_app.log',
+            'formatter': 'verbose',
         },
         'celery_file': {
             'class': 'logging.FileHandler',
@@ -269,6 +269,7 @@ SPECTACULAR_SETTINGS = {
     'SERVE_INCLUDE_SCHEMA': False,
 }
 
+CELERY_WORKER_HIJACK_ROOT_LOGGER = False
 CELERY_BROKER_URL = f'redis://{REDIS_HOST}:{REDIS_PORT}/0'
 CELERY_RESULT_BACKEND = f'redis://{REDIS_HOST}:{REDIS_PORT}/1'
 CELERY_ACCEPT_CONTENT = ['json']
