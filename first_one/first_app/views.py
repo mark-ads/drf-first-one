@@ -16,6 +16,7 @@ from first_one.first_app.filters import (
     EventFilter,
     EventNotificationFilter,
 )
+from first_one.first_app.mixins import LoggingMixin
 from first_one.first_app.models import Event, EventImage, EventNotification, EventPlace
 from first_one.first_app.permissions import EventImagePermission, EventPermission
 from first_one.first_app.serializers import (
@@ -57,48 +58,12 @@ logger = logging.getLogger("first_app")
         description="Удаляет место для мероприятия.",
     ),
 )
-class EventPlaceViewSet(ModelViewSet):
+class EventPlaceViewSet(LoggingMixin, ModelViewSet):
     """ViewSet для управления местами для мероприятий."""
 
     queryset = EventPlace.objects.all()
     serializer_class = EventPlaceSerializer
     permission_classes = [IsAdminUser]
-
-    def create(self, request, *args, **kwargs):
-        response = super().create(request, *args, **kwargs)
-        if response.status_code == 201:
-            logger.info(f"Создано новое место: {response.data.get('name')}")  # type: ignore
-        else:
-            logger.warning(f"Не удалось создать место: {response.data}")
-        return response
-
-    def update(self, request, *args, **kwargs):
-        instance = self.get_object()
-        response = super().update(request, *args, **kwargs)
-        if response.status_code == 200:
-            logger.info(f"Место обновлено: {response.data.get('name')}")
-        else:
-            logger.warning(f'Не удалось обновить место "{response.data}"')
-        return response
-
-    def partial_update(self, request, *args, **kwargs):
-        instance = self.get_object()
-        response = super().partial_update(request, *args, **kwargs)
-        if response.status_code in (200, 204):
-            logger.info(f"Частично обновлено место: {instance.name})")
-        else:
-            logger.warning(f"Не удалось частично обновить место {response.data}")
-        return response
-
-    def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-        response = super().destroy(request, *args, **kwargs)
-        if response.status_code in (200, 204):
-            logger.info(f"Место удалено {instance.name}")
-        else:
-            logger.warning(f"Не удалось удалить место {response.data}")
-        return response
-
 
 @extend_schema_view(
     list=extend_schema(
@@ -126,7 +91,7 @@ class EventPlaceViewSet(ModelViewSet):
         description="Удаляет мероприятие.",
     ),
 )
-class EventViewSet(ModelViewSet):
+class EventViewSet(LoggingMixin, ModelViewSet):
     """ViewSet для работы с мероприятиями."""
 
     queryset = Event.objects.all()
@@ -161,49 +126,17 @@ class EventViewSet(ModelViewSet):
         url_path="export",
         permission_classes=[IsAdminUser],
     )
-    def export(self, _):
+    def export(self, request):
+        user = getattr(request, 'user', None)
+        username = getattr(user, 'username', 'Неавторизованный пользователь')
         queryset = self.filter_queryset(self.get_queryset())
         service = EventExportService(queryset)
         new_xlsx = service.run()
 
         current_time = datetime.now().strftime("%Y_%m_%dT%H_%M")
         file_name = f"events_export_{current_time}.xlsx"
+        logger.info(f'Экспорт завершен. Файл {file_name}, пользователем: {username}')
         return FileResponse(new_xlsx, as_attachment=True, filename=file_name)
-
-    def create(self, request, *args, **kwargs):
-        response = super().create(request, *args, **kwargs)
-        if response.status_code == 201:
-            logger.info(f"Создано новое мероприятие: {response.data.get('name')}")  # type: ignore
-        else:
-            logger.warning(f"Не удалось создать мероприятие: {response.data}")
-        return response
-
-    def update(self, request, *args, **kwargs):
-        instance = self.get_object()
-        response = super().update(request, *args, **kwargs)
-        if response.status_code == 200:
-            logger.info(f"Мероприятие обновлено: {response.data.get('name')}")
-        else:
-            logger.warning(f'Не удалось обновить мероприятие "{response.data}"')
-        return response
-
-    def partial_update(self, request, *args, **kwargs):
-        instance = self.get_object()
-        response = super().partial_update(request, *args, **kwargs)
-        if response.status_code in (200, 204):
-            logger.info(f"Частично обновлено мероприятие: {instance.name})")
-        else:
-            logger.warning(f"Не удалось частично обновить мероприятие {response.data}")
-        return response
-
-    def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-        response = super().destroy(request, *args, **kwargs)
-        if response.status_code in (200, 204):
-            logger.info(f"Мероприятие удалено {instance.name}")
-        else:
-            logger.warning(f"Не удалось удалить мероприятие {response.data}")
-        return response
 
 
 @extend_schema_view(
@@ -224,7 +157,7 @@ class EventViewSet(ModelViewSet):
         description="Удаляет изображение для мероприятия.",
     ),
 )
-class EventImageViewSet(ModelViewSet):
+class EventImageViewSet(LoggingMixin, ModelViewSet):
     """ViewSet для работы с изображениями для мероприятий."""
 
     queryset = EventImage.objects.all()
@@ -243,22 +176,6 @@ class EventImageViewSet(ModelViewSet):
             )
         return qs
 
-    def create(self, request, *args, **kwargs):
-        response = super().create(request, *args, **kwargs)
-        if response.status_code == 201:
-            logger.info(f"Добавлено новое изображение: {response.data.get('image')}")  # type: ignore
-        else:
-            logger.warning(f"Не удалось добавить изображение: {response.data}")
-        return response
-
-    def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-        response = super().destroy(request, *args, **kwargs)
-        if response.status_code in (200, 204):
-            logger.info(f"Изображение удалено {instance}")
-        else:
-            logger.warning(f"Не удалось удалить изображение {response.data}")
-        return response
 
 
 @extend_schema_view(
@@ -287,7 +204,7 @@ class EventImageViewSet(ModelViewSet):
         description="Удаляет уведомление для мероприятия.",
     ),
 )
-class EventNotificationViewSet(ModelViewSet):
+class EventNotificationViewSet(LoggingMixin, ModelViewSet):
     """ViewSet для работы с уведомлениями о мероприятиях."""
 
     queryset = EventNotification.objects.all()
@@ -302,41 +219,6 @@ class EventNotificationViewSet(ModelViewSet):
 
         return qs
 
-    def create(self, request, *args, **kwargs):
-        response = super().create(request, *args, **kwargs)
-        if response.status_code == 201:
-            logger.info(f"Добавлено новое уведомление: {response.data.get('event')}")  # type: ignore
-        else:
-            logger.warning(f"Не удалось добавить уведомление: {response.data}")
-        return response
-
-    def update(self, request, *args, **kwargs):
-        instance = self.get_object()
-        response = super().update(request, *args, **kwargs)
-        if response.status_code == 200:
-            logger.info(f"Уведомление обновлено: {response.data.get('event')}")
-        else:
-            logger.warning(f'Не удалось обновить уведомление "{response.data}"')
-        return response
-
-    def partial_update(self, request, *args, **kwargs):
-        instance = self.get_object()
-        response = super().partial_update(request, *args, **kwargs)
-        if response.status_code in (200, 204):
-            logger.info(f"Частично обновлено уведомление: {instance.event})")
-        else:
-            logger.warning(f"Не удалось частично обновить уведомление {response.data}")
-        return response
-
-    def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-        response = super().destroy(request, *args, **kwargs)
-        if response.status_code in (200, 204):
-            logger.info(f"Изображение удалено {instance.event}")
-        else:
-            logger.warning(f"Не удалось удалить изображение {response.data}")
-        return response
-
 
 @extend_schema(
     summary="Импортировать меропритятия",
@@ -350,9 +232,16 @@ class ImportEventAPIView(generics.CreateAPIView):
     permission_classes = [IsAdminUser]
 
     def perform_create(self, serializer):
-        file = serializer.validated_data["file"]
-        service = EventImportService(file, self.request)
-        self.result = service.run()
+        try:
+            request = getattr(self, 'request', None)
+            user = getattr(request, 'user', None)
+            username = getattr(user, 'username', 'Не авторизован')
+            file = serializer.validated_data["file"]
+            service = EventImportService(file, self.request)
+            self.result = service.run()
+            logger.info(f'Импортирование мероприятний пользователем {username}.') 
+        except Exception as e:
+            logger.error(f'Ошибка импортирования: {e}')
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
