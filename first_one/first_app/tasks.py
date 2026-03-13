@@ -31,7 +31,7 @@ def update_weather_task():
     Данные о погоде сохраняются в модель WeatherForecast.
     """
 
-    logger.debug("Старт update_weather_task %s")
+    logger.debug("Старт update_weather_task.")
     # Ограничение на прогноз погоды, нельзя запрашивать дальше чем на 10 дней
     current_time = datetime.now()
     max_date = current_time + timedelta(days=10)
@@ -119,7 +119,7 @@ def check_event_status():
 
     for event in events:
         if event.publish_date <= datetime.now():
-            logger.info("Поменялся статус ивента", event.name)
+            logger.info(f"Поменялся статус ивента: {event.name}")
             event.status = Event.StatusChoices.PUBLISHED
             event.save(update_fields=["status"])
 
