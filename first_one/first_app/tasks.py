@@ -1,11 +1,12 @@
 import logging
 from datetime import datetime, timedelta
+from email.header import Header
 from pathlib import Path
 
 import requests
 from celery import shared_task
 from django.conf import settings
-from django.core.mail import send_mail
+from django.core.mail import EmailMessage
 
 from first_one.first_app.models import Event, EventNotification, WeatherForecast
 from first_one.first_app.utils import create_preview
@@ -44,52 +45,56 @@ def update_weather_task():
     ).select_related("place")
 
     for event in events:
-        params = {
-            "latitude": event.place.latitude,
-            "longitude": event.place.longitude,
-            "hourly": "temperature_2m,relativehumidity_2m,pressure_msl,windspeed_10m,winddirection_10m,precipitation",
-            "start_date": event.start_date.strftime("%Y-%m-%d"),
-            "end_date": event.start_date.strftime("%Y-%m-%d"),
-            "timezone": "Asia/Bangkok",
-        }
+        try:
+            params = {
+                "latitude": event.place.latitude,
+                "longitude": event.place.longitude,
+                "hourly": "temperature_2m,relativehumidity_2m,pressure_msl,windspeed_10m,winddirection_10m,precipitation",
+                "start_date": event.start_date.strftime("%Y-%m-%d"),
+                "end_date": event.start_date.strftime("%Y-%m-%d"),
+                "timezone": "Asia/Bangkok",
+            }
 
-        logger.debug("Запрос к АПИ сервиса погоды %s", event.name)
-        response = requests.get(WEATHER_URL, params=params, timeout=10)
+            logger.debug("Запрос к АПИ сервиса погоды %s", event.name)
+            response = requests.get(WEATHER_URL, params=params, timeout=10)
 
-        response.raise_for_status()
+            response.raise_for_status()
 
-        event.weather.all().delete()  # type: ignore
+            event.weather.all().delete()  # type: ignore
 
-        forecasts = response.json().get("hourly", {})
+            forecasts = response.json().get("hourly", {})
 
-        hour = event.start_date.hour  # час начала мероприятия
+            hour = event.start_date.hour  # час начала мероприятия
 
-        result = {}
+            result = {}
 
-        # Результат возвращается в виде словаря со списками: dict[str, list]
+            # Результат возвращается в виде словаря со списками: dict[str, list]
 
-        # Безопасное присвоение значений, если АПИ вернет пустые или неполные списки
-        for result_field, original_field in WEATHER_MAPPINGS.items():
-            temp = forecasts.get(original_field, [])
+            # Безопасное присвоение значений, если АПИ вернет пустые или неполные списки
+            for result_field, original_field in WEATHER_MAPPINGS.items():
+                temp = forecasts.get(original_field, [])
 
-            # Используем час как индекс в списке, чтобы получить нужный показатель
-            try:
-                result[result_field] = temp[hour]
-            except IndexError:
-                result[result_field] = None
+                # Используем час как индекс в списке, чтобы получить нужный показатель
+                try:
+                    result[result_field] = temp[hour]
+                except IndexError:
+                    result[result_field] = None
 
-        if result["pressure"] is not None:
-            pressure = result["pressure"] * 0.75006  # конвертация hPa в мм.рт.ст
-            result["pressure"] = round(pressure, 2)
+            if result["pressure"] is not None:
+                pressure = result["pressure"] * 0.75006  # конвертация hPa в мм.рт.ст
+                result["pressure"] = round(pressure, 2)
 
-        WeatherForecast.objects.create(
-            event=event,
-            temperature=result["temperature"],
-            humidity=result["humidity"],
-            pressure=result["pressure"],
-            wind_direction=result["wind_direction"],
-            wind_speed=result["wind_speed"],
-        )
+            WeatherForecast.objects.create(
+                event=event,
+                temperature=result["temperature"],
+                humidity=result["humidity"],
+                pressure=result["pressure"],
+                wind_direction=result["wind_direction"],
+                wind_speed=result["wind_speed"],
+            )
+            logger.info(f'Создан новый прогноз погоды для {event.name}')
+        except Exception as e:
+            logger.error(f'Ошибка запроса прогноза погоды: {e}')
 
 
 @shared_task
@@ -101,16 +106,21 @@ def send_email_notification(notification_id: int):
     email_list = notification.recipients
     subject = notification.email_subject or "Нет темы"
     text = notification.email_text or ""
+    encoded_subject = str(Header(subject, "utf-8"))
 
-    send_mail(
-        subject=subject,
-        message=text,
+    mail = EmailMessage(
+        subject=encoded_subject,
+        body=text,
         from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=email_list,
-        fail_silently=True,
+        to=email_list,
     )
-    event = Event.objects.get(notification.event)
-    logger.info("Уведомления отправлены %s", event.name)
+    mail.encoding = "utf-8"
+    mail.send(fail_silently=True)
+
+    event = notification.event
+    logger.info(
+        'Уведомления отправлены %s. Тема: "%s". Текст: "%s"', event.name, subject, text
+    )
 
 
 @shared_task

@@ -44,16 +44,16 @@ class Command(BaseCommand):
 
         event_names = [
             "Зимний корпоратив",
-            "8 Марта",
+            "День рождения",
             "Тимбилдинг",
             "Весенний корпоратив",
         ]
 
         event_dates = [
             datetime.fromisoformat("2026-01-27T18:00:00"),
-            datetime.fromisoformat("2026-03-08T18:00:00"),
             datetime.now() + timedelta(days=7),
-            datetime.now() + timedelta(days=30),
+            datetime.now() + timedelta(days=10),
+            datetime.now() + timedelta(days=20),
         ]
 
         now = datetime.now()
@@ -76,10 +76,8 @@ class Command(BaseCommand):
             )  # чтобы 4 ивенту назначилось [0] место проведения
             place = EventPlace.objects.get(name=places_names[place_idx])
 
-            if now < event_dates[i] - timedelta(days=10):
+            if now < event_dates[i]:
                 status = Event.StatusChoices.DRAFT
-            elif now < event_dates[i]:
-                status = Event.StatusChoices.PUBLISHED
             elif now > event_dates[i] + timedelta(hours=3):
                 status = Event.StatusChoices.ENDED
             else:
@@ -115,15 +113,17 @@ class Command(BaseCommand):
                             event=event, image=File(f, name=f"{i}_{j}.jpg")
                         )
 
-        if EventNotification.objects.all().exists():
-            EventNotification.objects.all().delete()
+            if EventNotification.objects.filter(event=event).exists():
+                notification = EventNotification.objects.get(event=event)
+                notification.delete()
+                logger.debug(f'Уведомление для {notification.event.name} удалено')
 
-        event = Event.objects.filter(status=Event.StatusChoices.DRAFT).first()
 
-        EventNotification.objects.create(
-            event=event,
-            recipients=["first@example.com", "second@example.com"],
-            email_subject="Пример темы письма",
-            email_text="Приглашаем на мероприятие",
-        )
+            start_date_str = event_dates[i].strftime('%d.%m.%Y в %H:%M') 
+            EventNotification.objects.create(
+                event=event,
+                recipients=["first@example.com", "second@example.com"],
+                email_subject=f"Приглашение на {event.name}",
+                email_text=f"Приглашаем на мероприятие {event.name}, которое пройдет в {place.name}, {start_date_str}",
+            )
         logger.info('populate_db выполнен')
