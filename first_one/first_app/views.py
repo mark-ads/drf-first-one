@@ -243,6 +243,11 @@ class ImportEventAPIView(generics.CreateAPIView):
         except Exception as e:
             logger.error(f'Ошибка импортирования: {e}')
 
+    def get(self, request):
+        """Показать страницу с импортом мероприятий из .xlsx файла."""
+        serializer = EventImportSerializer()
+        return Response({"serializer": serializer.data})
+
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         # Ниже линтер ругается, что код недоступен, в случае исключения
